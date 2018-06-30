@@ -37,38 +37,36 @@ export default class Server {
     res.send('Registrar middleware is running!');
   }
 
-  handleCreate = async (req, res) => {
+  handleCreate = (req, res) => {
     const { owner, domain, target } = req.body;
 
-    try {
+    this.safeRespond(res, async () => {
       res.json(await this.scriptRunner.register(owner, domain, target));
-    } catch (err) {
-      console.error(err);
-      res.statusCode = 500;
-      res.send(err.message);
-    }
+    });
   }
 
-  handleUpdate = async (req, res) => {
+  handleUpdate = (req, res) => {
     const { domain } = req.params;
     const { target } = req.body;
 
-    try {
+    this.safeRespond(res, async () => {
       res.json(await this.scriptRunner.update(domain, target));
-    } catch (err) {
-      console.error(err);
-      res.statusCode = 500;
-      res.send(err.message);
-    }
+    });
   }
 
-  handleDelete = async (req, res) => {
+  handleDelete = (req, res) => {
     const { domain } = req.params;
 
-    try {
+    this.safeRespond(res, async () => {
       res.json(await this.scriptRunner.delete(domain));
+    });
+  }
+
+  safeRespond = (res, callback) => {
+    try {
+      callback();
     } catch (err) {
-      console.error(err);
+      console.error(err); // eslint-disable-line no-console
       res.statusCode = 500;
       res.send(err.message);
     }
