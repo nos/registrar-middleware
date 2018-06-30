@@ -21,8 +21,8 @@ export default class ScriptRunner {
     return this.execute('RegisterDomain', [
       byteArray(this.address, 'address'),
       string(domain),
-      byteArray(ownerAddress, 'address'),
-      string(target)
+      string(target),
+      byteArray(ownerAddress, 'address')
     ]);
   }
 
