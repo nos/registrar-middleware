@@ -1531,6 +1531,10 @@ expand-range@^1.8.1:
   dependencies:
     fill-range "^2.1.0"
 
+express-auth-parser@^0.1.2:
+  version "0.1.2"
+  resolved "https://registry.npmjs.org/express-auth-parser/-/express-auth-parser-0.1.2.tgz#d1e99a252d43dc55b474b8c5ce3128b173bf3a94"
+
 express@^4.16.3:
   version "4.16.3"
   resolved "https://registry.npmjs.org/express/-/express-4.16.3.tgz#6af8a502350db3246ecc4becf6b5a34d22f7ed53"

@@ -19,6 +19,8 @@ const scriptRunner = new ScriptRunner({
   scriptHash: process.env.CONTRACT_SCRIPTHASH
 });
 
-const server = new Server(scriptRunner);
+const server = new Server(scriptRunner, {
+  authToken: process.env.AUTH_TOKEN
+});
 
 server.listen(port, () => console.log(`Listening on port ${port}.`));
