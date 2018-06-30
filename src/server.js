@@ -45,10 +45,10 @@ export default class Server {
   }
 
   handleCreate = (req, res) => {
-    const { owner, domain, target } = req.body;
+    const { domain, target, owner } = req.body;
 
     this.safeRespond(res, async () => {
-      res.json(await this.scriptRunner.register(owner, domain, target));
+      res.json(await this.scriptRunner.register(domain, target, owner));
     });
   }
 

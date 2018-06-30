@@ -17,13 +17,18 @@ export default class ScriptRunner {
     ]);
   }
 
-  register = (ownerAddress, domain, target) => {
-    return this.execute('RegisterDomain', [
+  register = (domain, target, ownerAddress = null) => {
+    const args = [
       byteArray(this.address, 'address'),
       string(domain),
-      string(target),
-      byteArray(ownerAddress, 'address')
-    ]);
+      string(target)
+    ];
+
+    if (ownerAddress) {
+      args.push(byteArray(ownerAddress, 'address'));
+    }
+
+    return this.execute('RegisterDomain', args);
   }
 
   update = (domain, target) => {
