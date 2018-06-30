@@ -13,33 +13,35 @@ export default class ScriptRunner {
     this.scriptHash = scriptHash;
   }
 
-  register = async (ownerScriptHash, domain, target) => {
-    return rpc.Query.invoke(
-      this.scriptHash,
-      string('register'),
+  register = (ownerScriptHash, domain, target) => {
+    return this.execute('register', [
       byteArray(reverseHex(this.scriptHash)),
       string(domain),
       byteArray(reverseHex(ownerScriptHash)),
       string(target)
-    ).execute(await this.getEndpoint());
+    ]);
   }
 
-  update = async (domain, target) => {
-    return rpc.Query.invoke(
-      this.scriptHash,
-      string('update'),
+  update = (domain, target) => {
+    return this.execute('update', [
       byteArray(reverseHex(this.scriptHash)),
       string(domain),
       string(target)
-    ).execute(await this.getEndpoint());
+    ]);
   }
 
-  delete = async (domain) => {
-    return rpc.Query.invoke(
-      this.scriptHash,
-      string('delete'),
+  delete = (domain) => {
+    return this.execute('delete', [
       byteArray(reverseHex(this.scriptHash)),
       string(domain)
+    ]);
+  }
+
+  execute = async (operation, args = []) => {
+    return rpc.Query.invoke(
+      this.scriptHash,
+      string(operation),
+      ...args
     ).execute(await this.getEndpoint());
   }
 
