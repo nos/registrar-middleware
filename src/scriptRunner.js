@@ -52,10 +52,16 @@ export default class ScriptRunner {
       net: this.network,
       address: this.address,
       privateKey: this.privateKey,
-      script: new sc.ScriptBuilder(this.scriptHash, operation, args).str
+      script: this.buildScript(operation, args)
     }, api.neoscan);
 
     return response;
+  }
+
+  buildScript = (operation, args) => {
+    const builder = new sc.ScriptBuilder();
+    builder.emitAppCall(this.scriptHash, operation, args);
+    return builder.str;
   }
 
   getEndpoint = () => {
