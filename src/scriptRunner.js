@@ -17,13 +17,18 @@ export default class ScriptRunner {
     ]);
   }
 
-  register = (ownerAddress, domain, target) => {
-    return this.execute('RegisterDomain', [
+  register = (domain, target, ownerAddress = null) => {
+    const args = [
       byteArray(this.address, 'address'),
       string(domain),
-      string(target),
-      byteArray(ownerAddress, 'address')
-    ]);
+      string(target)
+    ];
+
+    if (ownerAddress) {
+      args.push(byteArray(ownerAddress, 'address'));
+    }
+
+    return this.execute('RegisterDomain', args);
   }
 
   update = (domain, target) => {
@@ -47,10 +52,16 @@ export default class ScriptRunner {
       net: this.network,
       address: this.address,
       privateKey: this.privateKey,
-      script: new sc.ScriptBuilder(this.scriptHash, operation, args).str
+      script: this.buildScript(operation, args)
     }, api.neoscan);
 
     return response;
+  }
+
+  buildScript = (operation, args) => {
+    const builder = new sc.ScriptBuilder();
+    builder.emitAppCall(this.scriptHash, operation, args);
+    return builder.str;
   }
 
   getEndpoint = () => {
