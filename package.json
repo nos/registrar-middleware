@@ -15,8 +15,12 @@
     "lint": "eslint --color src"
   },
   "dependencies": {
+    "@cityofzion/neon-js": "^3.9.1",
+    "body-parser": "^1.18.3",
     "dotenv": "^6.0.0",
-    "express": "^4.16.3"
+    "express": "^4.16.3",
+    "express-auth-parser": "^0.1.2",
+    "morgan": "^1.9.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",

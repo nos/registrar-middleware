@@ -1,23 +1,30 @@
 import express from 'express';
-
-const DEFAULT_PORT = 3000;
+import morgan from 'morgan';
+import authParser from 'express-auth-parser';
+import bodyParser from 'body-parser';
 
 export default class Server {
-  constructor({ wif, address, scriptHash } = {}) {
-    this.wif = wif;
-    this.address = address;
-    this.scriptHash = scriptHash;
+  constructor(scriptRunner, { authToken } = {}) {
+    this.scriptRunner = scriptRunner;
+    this.authToken = authToken;
     this.app = this.createApp();
   }
 
-  listen = (port = DEFAULT_PORT, ...args) => {
-    this.app.listen(port, ...args);
+  listen = (...args) => {
+    this.app.listen(...args);
   }
 
   createApp = () => {
     const app = express();
 
+    app.use(morgan('dev'));
+    app.use(authParser);
+    app.use(bodyParser.json());
+
     app.get('/', this.handleHeartbeat);
+    app.get('/domains/:domain', this.handleFetch);
+
+    app.use(this.authenticate);
     app.post('/domains', this.handleCreate);
     app.put('/domains/:domain', this.handleUpdate);
     app.delete('/domains/:domain', this.handleDelete);
@@ -29,18 +36,59 @@ export default class Server {
     res.send('Registrar middleware is running!');
   }
 
+  handleFetch = (req, res) => {
+    const { domain } = req.params;
+
+    this.safeRespond(res, async () => {
+      res.json(await this.scriptRunner.fetch(domain));
+    });
+  }
+
   handleCreate = (req, res) => {
-    // TODO accept `domain`, `target`, & owner `address` params
-    res.send('TODO: Register on name-service SC');
+    const { owner, domain, target } = req.body;
+
+    this.safeRespond(res, async () => {
+      res.json(await this.scriptRunner.register(owner, domain, target));
+    });
   }
 
   handleUpdate = (req, res) => {
-    // TODO accept `domain` & `target` params
-    res.send('TODO: Update on name-service SC');
+    const { domain } = req.params;
+    const { target } = req.body;
+
+    this.safeRespond(res, async () => {
+      res.json(await this.scriptRunner.update(domain, target));
+    });
   }
 
   handleDelete = (req, res) => {
-    // TODO accept `domain` param
-    res.send('TODO: Remove from name-service SC');
+    const { domain } = req.params;
+
+    this.safeRespond(res, async () => {
+      res.json(await this.scriptRunner.delete(domain));
+    });
+  }
+
+  safeRespond = async (res, callback) => {
+    try {
+      await callback();
+    } catch (err) {
+      console.error(err); // eslint-disable-line no-console
+      res.status(400).json({ error: err.message });
+    }
+  }
+
+  authenticate = (req, res, next) => {
+    if (!req.authorization || !this.authorized(req.authorization)) {
+      res.status(403).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    next();
+  }
+
+  authorized = (authorization) => {
+    const { scheme, credentials } = authorization;
+    return scheme === 'Basic' && credentials === this.authToken;
   }
 }
