@@ -1,48 +1,56 @@
-import { sc, u, rpc, api } from '@cityofzion/neon-js';
+import { sc, api, wallet } from '@cityofzion/neon-js';
 
 const { string, byteArray } = sc.ContractParam;
 
-function reverseHex(scriptHash) {
-  return u.reverseHex(scriptHash && scriptHash.replace(/^0x/, ''));
-}
-
 export default class ScriptRunner {
-  constructor({ network = 'TestNet', address, scriptHash } = {}) {
+  constructor({ network = 'TestNet', address, scriptHash, wif } = {}) {
     this.network = network;
     this.address = address;
     this.scriptHash = scriptHash;
+    this.privateKey = new wallet.Account(wif).privateKey;
   }
 
-  register = (ownerScriptHash, domain, target) => {
-    return this.execute('register', [
-      byteArray(reverseHex(this.scriptHash)),
+  fetch = (domain) => {
+    return this.execute('GetDomain', [
+      byteArray(this.address, 'address'),
+      string(domain)
+    ]);
+  }
+
+  register = (ownerAddress, domain, target) => {
+    return this.execute('RegisterDomain', [
+      byteArray(this.address, 'address'),
       string(domain),
-      byteArray(reverseHex(ownerScriptHash)),
+      byteArray(ownerAddress, 'address'),
       string(target)
     ]);
   }
 
   update = (domain, target) => {
-    return this.execute('update', [
-      byteArray(reverseHex(this.scriptHash)),
+    return this.execute('SetDomainTarget', [
+      byteArray(this.address, 'address'),
       string(domain),
       string(target)
     ]);
   }
 
   delete = (domain) => {
-    return this.execute('delete', [
-      byteArray(reverseHex(this.scriptHash)),
+    return this.execute('DeleteDomain', [
+      byteArray(this.address, 'address'),
       string(domain)
     ]);
   }
 
   execute = async (operation, args = []) => {
-    return rpc.Query.invoke(
-      this.scriptHash,
-      string(operation),
-      ...args
-    ).execute(await this.getEndpoint());
+    const { response } = await api.doInvoke({
+      gas: 0,
+      net: this.network,
+      address: this.address,
+      privateKey: this.privateKey,
+      script: new sc.ScriptBuilder(this.scriptHash, operation, args).str
+    }, api.neoscan);
+
+    return response;
   }
 
   getEndpoint = () => {

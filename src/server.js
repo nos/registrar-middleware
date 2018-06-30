@@ -2,21 +2,14 @@ import express from 'express';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
 
-import ScriptRunner from './scriptRunner';
-
-const DEFAULT_PORT = 3000;
-
 export default class Server {
-  constructor({ wif, address, scriptHash } = {}) {
-    this.wif = wif;
-    this.address = address;
-    this.scriptHash = scriptHash;
+  constructor(scriptRunner) {
+    this.scriptRunner = scriptRunner;
     this.app = this.createApp();
-    this.scriptRunner = new ScriptRunner({ address, scriptHash });
   }
 
-  listen = (port = DEFAULT_PORT, ...args) => {
-    this.app.listen(port, ...args);
+  listen = (...args) => {
+    this.app.listen(...args);
   }
 
   createApp = () => {
@@ -26,6 +19,7 @@ export default class Server {
     app.use(bodyParser.json());
 
     app.get('/', this.handleHeartbeat);
+    app.get('/domains/:domain', this.handleFetch);
     app.post('/domains', this.handleCreate);
     app.put('/domains/:domain', this.handleUpdate);
     app.delete('/domains/:domain', this.handleDelete);
@@ -35,6 +29,14 @@ export default class Server {
 
   handleHeartbeat = (req, res) => {
     res.send('Registrar middleware is running!');
+  }
+
+  handleFetch = (req, res) => {
+    const { domain } = req.params;
+
+    this.safeRespond(res, async () => {
+      res.json(await this.scriptRunner.fetch(domain));
+    });
   }
 
   handleCreate = (req, res) => {
@@ -62,12 +64,12 @@ export default class Server {
     });
   }
 
-  safeRespond = (res, callback) => {
+  safeRespond = async (res, callback) => {
     try {
-      callback();
+      await callback();
     } catch (err) {
       console.error(err); // eslint-disable-line no-console
-      res.statusCode = 500;
+      res.statusCode = 400;
       res.send(err.message);
     }
   }
