@@ -15,7 +15,6 @@ const port = parseInt(process.env.PORT, 10);
 const scriptRunner = new ScriptRunner({
   network: process.env.NETWORK,
   wif: process.env.CONTRACT_WIF,
-  address: process.env.CONTRACT_ADDRESS,
   scriptHash: process.env.CONTRACT_SCRIPTHASH
 });
 

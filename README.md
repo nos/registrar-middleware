@@ -10,9 +10,9 @@
 
 ## Usage
 
-Running `registrar-middleware` depends on the `NETWORK`, `AUTH_TOKEN`, `CONTRACT_ADDRESS` and
-`CONTRACT_WIF` environment variables being set.  Either specify these via an `.env.local` file, or
-pass them as command line arguments when running the below commands.
+Running `registrar-middleware` depends on the `NETWORK`, `AUTH_TOKEN`, and `CONTRACT_WIF`
+environment variables being set.  Either specify these via an `.env.local` file, or pass them as
+command line arguments when running the below commands.
 
 ### Production
 

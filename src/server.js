@@ -3,6 +3,8 @@ import morgan from 'morgan';
 import authParser from 'express-auth-parser';
 import bodyParser from 'body-parser';
 
+const GAS_AMOUNT = 500;
+
 export default class Server {
   constructor(scriptRunner, { authToken } = {}) {
     this.scriptRunner = scriptRunner;
@@ -17,7 +19,7 @@ export default class Server {
   createApp = () => {
     const app = express();
 
-    app.use(morgan('dev'));
+    app.use(morgan('combined'));
     app.use(authParser);
     app.use(bodyParser.json());
 
@@ -39,42 +41,56 @@ export default class Server {
   handleFetch = (req, res) => {
     const { domain } = req.params;
 
-    this.safeRespond(res, async () => {
-      res.json(await this.scriptRunner.fetch(domain));
-    });
+    this.safeRespond(res, () => this.scriptRunner.fetch(domain));
   }
 
-  handleCreate = (req, res) => {
+  handleCreate = async (req, res) => {
     const { domain, target, owner } = req.body;
 
-    this.safeRespond(res, async () => {
-      res.json(await this.scriptRunner.register(domain, target, owner));
+    const response = await this.safeRespond(res, () => {
+      return this.scriptRunner.register(domain, target, owner);
     });
+
+    if (!response || !owner) {
+      return;
+    }
+
+    try {
+      await this.scriptRunner.nextBlock();
+      const { response: { result: success } } = await this.scriptRunner.sendGAS(GAS_AMOUNT, owner);
+
+      if (!success) {
+        throw new Error('Transaction unsuccessful.');
+      }
+
+      console.log(`Successfully sent GAS to ${owner}.`); // eslint-disable-line no-console
+    } catch (err) {
+      console.error('Failed to send GAS.', err); // eslint-disable-line no-console
+    }
   }
 
   handleUpdate = (req, res) => {
     const { domain } = req.params;
     const { target } = req.body;
 
-    this.safeRespond(res, async () => {
-      res.json(await this.scriptRunner.update(domain, target));
-    });
+    this.safeRespond(res, () => this.scriptRunner.update(domain, target));
   }
 
   handleDelete = (req, res) => {
     const { domain } = req.params;
 
-    this.safeRespond(res, async () => {
-      res.json(await this.scriptRunner.delete(domain));
-    });
+    this.safeRespond(res, () => this.scriptRunner.delete(domain));
   }
 
   safeRespond = async (res, callback) => {
     try {
-      await callback();
+      const response = await callback();
+      res.json(response);
+      return response;
     } catch (err) {
-      console.error(err); // eslint-disable-line no-console
+      console.error('Failed to process request.', err); // eslint-disable-line no-console
       res.status(400).json({ error: err.message });
+      return null;
     }
   }
 
