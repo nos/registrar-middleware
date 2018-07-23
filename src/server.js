@@ -1,7 +1,6 @@
 import express from 'express';
 import morgan from 'morgan';
 import authParser from 'express-auth-parser';
-import bodyParser from 'body-parser';
 
 export default class Server {
   constructor(scriptRunner, { authToken } = {}) {
@@ -19,7 +18,7 @@ export default class Server {
 
     app.use(morgan('dev'));
     app.use(authParser);
-    app.use(bodyParser.json());
+    app.use(express.json());
 
     app.get('/', this.handleHeartbeat);
     app.get('/domains/:domain', this.handleFetch);
