@@ -6,3 +6,10 @@ settings.addNetwork(new rpc.Network({
     neoscan: 'http://localhost:4000/api/main_net'
   }
 }));
+
+settings.addNetwork(new rpc.Network({
+  name: 'nOSNet',
+  extra: {
+    neoscan: 'http://neoscan-testnet.nos.io:4000/api/main_net'
+  }
+}));
