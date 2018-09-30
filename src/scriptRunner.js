@@ -55,6 +55,10 @@ export default class ScriptRunner {
       script: this.buildScript(operation, args)
     }, api.neoscan);
 
+    if (response && !response.result) {
+      throw new Error('Invocation failed.');
+    }
+
     return response;
   }
 
